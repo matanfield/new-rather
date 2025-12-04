@@ -1,7 +1,8 @@
 'use client';
 
+import { useQueryClient } from '@tanstack/react-query';
 import { useAppStore } from '@/stores/app-store';
-import { useThread, useChat, useCreateThread, useTextSelection, useCreateSubthread } from '@/hooks';
+import { useThread, useChat, useCreateThread, useTextSelection, useCreateSubthread, streamSubthreadMessage } from '@/hooks';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { MessageList, MessageInput } from '@/components/message';
@@ -10,7 +11,15 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Plus } from 'lucide-react';
 
 export function MainContent() {
-  const { activeThreadId, setActiveThread, setRightPaneOpen, setHighlightedSubthread } = useAppStore();
+  const queryClient = useQueryClient();
+  const { 
+    activeThreadId, 
+    setActiveThread, 
+    setRightPaneOpen, 
+    setHighlightedSubthread,
+    setNewSubthread,
+    setSubthreadStreaming,
+  } = useAppStore();
   const { data, isLoading } = useThread(activeThreadId);
   const createThread = useCreateThread();
   const createSubthread = useCreateSubthread();
@@ -25,10 +34,13 @@ export function MainContent() {
     setActiveThread(thread.id);
   };
 
-  const handleCreateSubthread = async (message: string) => {
+  // Option A: Send and stay in parent thread, show in right pane
+  const handleSendSubthread = async (message: string) => {
     if (!selection || !activeThreadId) return;
 
-    await createSubthread.mutateAsync({
+    clearSelection();
+
+    const result = await createSubthread.mutateAsync({
       parentThreadId: activeThreadId,
       anchorMessageId: selection.messageId,
       anchorStart: selection.start,
@@ -37,8 +49,58 @@ export function MainContent() {
       firstMessage: message,
     });
 
-    clearSelection();
+    // Set up optimistic state for right pane
+    setNewSubthread({
+      thread: result.thread,
+      userMessage: result.userMessage,
+    });
+    setHighlightedSubthread(result.thread.id);
     setRightPaneOpen(true);
+
+    // Start streaming AI response
+    await streamSubthreadMessage(
+      result.thread.id,
+      message,
+      (content) => setSubthreadStreaming(result.thread.id, content),
+      async () => {
+        // Clear streaming and refresh data
+        setSubthreadStreaming(null);
+        setNewSubthread(null);
+        await queryClient.invalidateQueries({ queryKey: ['threads', result.thread.id] });
+        await queryClient.invalidateQueries({ queryKey: ['threads', activeThreadId] });
+      }
+    );
+  };
+
+  // Option B: Send and navigate into the subthread
+  const handleSendAndEnterSubthread = async (message: string) => {
+    if (!selection || !activeThreadId) return;
+
+    clearSelection();
+
+    const result = await createSubthread.mutateAsync({
+      parentThreadId: activeThreadId,
+      anchorMessageId: selection.messageId,
+      anchorStart: selection.start,
+      anchorEnd: selection.end,
+      anchorText: selection.text,
+      firstMessage: message,
+    });
+
+    // Navigate into the new subthread immediately
+    setActiveThread(result.thread.id);
+    
+    // Note: The message will be sent via API and useChat will pick up 
+    // the streaming when we navigate. However, we need to trigger it.
+    // Let's consume the stream silently first, then refetch
+    await streamSubthreadMessage(
+      result.thread.id,
+      message,
+      () => {}, // Don't need to track streaming since we're navigating
+      async () => {
+        await queryClient.invalidateQueries({ queryKey: ['threads', result.thread.id] });
+      }
+    );
   };
 
   const handleAnchorClick = (subthreadId: string) => {
@@ -111,8 +173,10 @@ export function MainContent() {
       {selection && (
         <SelectionPopup
           selection={selection}
-          onSubmit={handleCreateSubthread}
+          onSend={handleSendSubthread}
+          onSendAndEnter={handleSendAndEnterSubthread}
           onClose={clearSelection}
+          isLoading={createSubthread.isPending}
         />
       )}
 

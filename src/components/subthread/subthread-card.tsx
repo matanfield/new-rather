@@ -3,14 +3,17 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ChevronDown, ChevronRight, ExternalLink } from 'lucide-react';
+import { ChevronDown, ChevronRight, ExternalLink, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Thread, Message } from '@/db/schema';
 
 interface SubthreadCardProps {
   subthread: Thread;
   messages?: Message[];
+  optimisticUserMessage?: Message | null;
+  streamingContent?: string;
   isHighlighted?: boolean;
+  isNew?: boolean; // Auto-expand new subthreads
   onEnter: () => void;
   onHighlight?: () => void;
 }
@@ -18,37 +21,55 @@ interface SubthreadCardProps {
 export function SubthreadCard({
   subthread,
   messages = [],
+  optimisticUserMessage,
+  streamingContent,
   isHighlighted,
+  isNew,
   onEnter,
   onHighlight,
 }: SubthreadCardProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
+  // Auto-expand when new or streaming - compute initial state
+  const shouldAutoExpand = isNew || !!streamingContent;
+  const [isExpanded, setIsExpanded] = useState(shouldAutoExpand);
+  
+  // Keep expanded while streaming (derived, not effect-based)
+  const effectiveExpanded = isExpanded || shouldAutoExpand;
 
   const handleClick = () => {
     onHighlight?.();
-    setIsExpanded(!isExpanded);
+    setIsExpanded(!effectiveExpanded);
   };
 
-  const firstMessage = messages[0];
-  const previewMessages = messages.slice(0, 3);
+  // Combine real messages with optimistic
+  const allMessages = optimisticUserMessage 
+    ? [...messages, optimisticUserMessage]
+    : messages;
+  
+  const firstMessage = allMessages[0];
+  const previewMessages = allMessages.slice(0, 3);
+  const isStreaming = !!streamingContent;
 
   return (
     <Card
       className={cn(
         'cursor-pointer transition-all',
-        isHighlighted && 'ring-2 ring-primary'
+        isHighlighted && 'ring-2 ring-primary',
+        isNew && 'border-primary'
       )}
       onClick={handleClick}
     >
       <CardHeader className="p-3 pb-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 flex-1 min-w-0">
-            {isExpanded ? (
+            {effectiveExpanded ? (
               <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
             ) : (
               <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
             )}
             <span className="font-medium text-sm truncate">{subthread.title}</span>
+            {isStreaming && (
+              <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
+            )}
           </div>
           <Button
             size="icon"
@@ -64,7 +85,7 @@ export function SubthreadCard({
         </div>
       </CardHeader>
 
-      {!isExpanded && firstMessage && (
+      {!effectiveExpanded && firstMessage && (
         <CardContent className="p-3 pt-0">
           <p className="text-xs text-muted-foreground line-clamp-2">
             {firstMessage.content}
@@ -72,7 +93,7 @@ export function SubthreadCard({
         </CardContent>
       )}
 
-      {isExpanded && (
+      {effectiveExpanded && (
         <CardContent className="p-3 pt-0 space-y-2 max-h-[300px] overflow-y-auto">
           {previewMessages.length > 0 ? (
             previewMessages.map((msg) => (
@@ -94,10 +115,19 @@ export function SubthreadCard({
           ) : (
             <p className="text-xs text-muted-foreground italic">No messages yet</p>
           )}
+
+          {/* Streaming AI response */}
+          {streamingContent && (
+            <div className="text-xs p-2 rounded bg-muted mr-4">
+              <span className="font-medium">AI: </span>
+              <span>{streamingContent}</span>
+              <span className="inline-block w-1 h-3 ml-0.5 bg-foreground animate-pulse" />
+            </div>
+          )}
           
-          {messages.length > 3 && (
+          {allMessages.length > 3 && !streamingContent && (
             <p className="text-xs text-muted-foreground text-center">
-              +{messages.length - 3} more messages
+              +{allMessages.length - 3} more messages
             </p>
           )}
 

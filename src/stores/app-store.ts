@@ -1,8 +1,15 @@
 import { create } from 'zustand';
+import type { Thread, Message } from '@/db/schema';
 
 interface NavigationHistory {
   threadId: string;
   timestamp: number;
+}
+
+// For optimistic UI when creating subthreads
+interface NewSubthreadState {
+  thread: Thread;
+  userMessage: Message;
 }
 
 interface AppState {
@@ -44,6 +51,14 @@ interface AppState {
   streamingContent: string;
   setStreaming: (streaming: boolean, content?: string) => void;
   appendStreamingContent: (chunk: string) => void;
+
+  // Subthread streaming (for right pane)
+  newSubthread: NewSubthreadState | null;
+  subthreadStreamingId: string | null;
+  subthreadStreamingContent: string;
+  setNewSubthread: (state: NewSubthreadState | null) => void;
+  setSubthreadStreaming: (threadId: string | null, content?: string) => void;
+  appendSubthreadStreamingContent: (chunk: string) => void;
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -115,4 +130,14 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({ isStreaming: streaming, streamingContent: content }),
   appendStreamingContent: (chunk) =>
     set((state) => ({ streamingContent: state.streamingContent + chunk })),
+
+  // Subthread streaming (for right pane)
+  newSubthread: null,
+  subthreadStreamingId: null,
+  subthreadStreamingContent: '',
+  setNewSubthread: (state) => set({ newSubthread: state }),
+  setSubthreadStreaming: (threadId, content = '') =>
+    set({ subthreadStreamingId: threadId, subthreadStreamingContent: content }),
+  appendSubthreadStreamingContent: (chunk) =>
+    set((state) => ({ subthreadStreamingContent: state.subthreadStreamingContent + chunk })),
 }));
