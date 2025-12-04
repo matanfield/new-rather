@@ -43,6 +43,8 @@ export function useChat({ threadId, onFinish }: UseChatOptions) {
         assistantContent: '',
       });
 
+      let finalAssistantContent = '';
+
       try {
         const res = await fetch(`/api/threads/${threadId}/messages`, {
           method: 'POST',
@@ -55,31 +57,58 @@ export function useChat({ threadId, onFinish }: UseChatOptions) {
 
         const reader = res.body.getReader();
         const decoder = new TextDecoder();
-        let accumulated = '';
 
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
 
           const chunk = decoder.decode(value);
-          accumulated += chunk;
+          finalAssistantContent += chunk;
           setOptimistic(prev => ({
             ...prev,
-            assistantContent: accumulated,
+            assistantContent: finalAssistantContent,
           }));
         }
 
-        // Clear optimistic state BEFORE invalidating to prevent duplicates
+        // Update cache directly with the new messages to avoid flash
+        queryClient.setQueryData(['threads', threadId], (oldData: any) => {
+          if (!oldData) return oldData;
+          
+          const newUserMessage: Message = {
+            id: `user-${Date.now()}`,
+            threadId,
+            role: 'user',
+            content: content.trim(),
+            position: oldData.messages.length,
+            createdAt: new Date(),
+          };
+          
+          const newAssistantMessage: Message = {
+            id: `assistant-${Date.now()}`,
+            threadId,
+            role: 'assistant',
+            content: finalAssistantContent,
+            position: oldData.messages.length + 1,
+            createdAt: new Date(),
+          };
+          
+          return {
+            ...oldData,
+            messages: [...oldData.messages, newUserMessage, newAssistantMessage],
+          };
+        });
+
+        // Clear optimistic state - cache now has the messages
         setOptimistic({ userMessage: null, assistantContent: '' });
         
-        // Now refresh with server data
-        await queryClient.invalidateQueries({ queryKey: ['threads', threadId] });
-        await queryClient.invalidateQueries({ queryKey: ['threads'] });
+        // Background refresh to get real IDs and sync with server
+        // Use refetch instead of invalidate to not clear the cache
+        queryClient.refetchQueries({ queryKey: ['threads', threadId] });
+        queryClient.invalidateQueries({ queryKey: ['threads'] });
         
         onFinish?.();
       } catch (error) {
         console.error('Failed to send message:', error);
-        // Clear optimistic state on error too
         setOptimistic({ userMessage: null, assistantContent: '' });
       } finally {
         setIsLoading(false);
