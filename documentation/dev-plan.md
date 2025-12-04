@@ -67,25 +67,25 @@ This document outlines the development phases for Rather, a fractal AI chat appl
 
 ---
 
-## Phase 3: Subthread System
+## Phase 3: Subthread System ✅
 
 ### User Subthread Creation
-- [ ] Text selection detection in AI messages
-- [ ] Selection popup component
-- [ ] Create subthread from selection
-- [ ] Anchor position storage
+- [x] Text selection detection in AI messages
+- [x] Selection popup component
+- [x] Create subthread from selection
+- [x] Anchor position storage
 
 ### Anchor System
-- [ ] Anchor highlighting in messages
+- [x] Anchor highlighting in messages
 - [ ] `[[syntax]]` parsing in user input
 - [ ] Subthread creation from inline anchors
-- [ ] Click anchor → open right pane + highlight card
+- [x] Click anchor → open right pane + highlight card
 
 ### Right Pane
-- [ ] Subthread cards (collapsed/expanded states)
-- [ ] Card ordering by anchor position
-- [ ] Enter subthread navigation
-- [ ] Right pane toggle button
+- [x] Subthread cards (collapsed/expanded states)
+- [x] Card ordering by anchor position
+- [x] Enter subthread navigation
+- [x] Right pane toggle button
 
 ### AI Subthread Creation
 - [ ] Tool definition for create_subthread

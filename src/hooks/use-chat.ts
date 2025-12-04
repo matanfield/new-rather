@@ -71,7 +71,7 @@ export function useChat({ threadId, onFinish }: UseChatOptions) {
         }
 
         // Update cache directly with the new messages to avoid flash
-        queryClient.setQueryData(['threads', threadId], (oldData: any) => {
+        queryClient.setQueryData(['threads', threadId], (oldData: { messages: Message[] } | undefined) => {
           if (!oldData) return oldData;
           
           const newUserMessage: Message = {

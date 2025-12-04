@@ -1,17 +1,52 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useMemo } from 'react';
 import { MessageBubble, StreamingMessage } from './message-bubble';
-import type { Message } from '@/db/schema';
+import type { Message, Thread } from '@/db/schema';
+
+interface Anchor {
+  start: number;
+  end: number;
+  subthreadId: string;
+}
 
 interface MessageListProps {
   messages: Message[];
+  subthreads?: Thread[];
   optimisticUserMessage?: Message | null;
   streamingContent?: string;
+  onTextSelect?: (messageId: string, element: HTMLElement) => void;
+  onAnchorClick?: (subthreadId: string) => void;
 }
 
-export function MessageList({ messages, optimisticUserMessage, streamingContent }: MessageListProps) {
+export function MessageList({ 
+  messages, 
+  subthreads = [],
+  optimisticUserMessage, 
+  streamingContent,
+  onTextSelect,
+  onAnchorClick,
+}: MessageListProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  // Build anchors map from subthreads
+  const anchorsMap = useMemo(() => {
+    const map = new Map<string, Anchor[]>();
+    
+    subthreads.forEach(sub => {
+      if (sub.anchorMessageId && sub.anchorStart !== null && sub.anchorEnd !== null) {
+        const existing = map.get(sub.anchorMessageId) || [];
+        existing.push({
+          start: sub.anchorStart,
+          end: sub.anchorEnd,
+          subthreadId: sub.id,
+        });
+        map.set(sub.anchorMessageId, existing);
+      }
+    });
+    
+    return map;
+  }, [subthreads]);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -21,7 +56,13 @@ export function MessageList({ messages, optimisticUserMessage, streamingContent 
   return (
     <div className="space-y-2">
       {messages.map((message) => (
-        <MessageBubble key={message.id} message={message} />
+        <MessageBubble 
+          key={message.id} 
+          message={message}
+          anchors={anchorsMap.get(message.id)}
+          onTextSelect={onTextSelect}
+          onAnchorClick={onAnchorClick}
+        />
       ))}
       {/* Show optimistic user message while waiting for server */}
       {optimisticUserMessage && (

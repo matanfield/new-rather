@@ -1,17 +1,20 @@
 'use client';
 
 import { useAppStore } from '@/stores/app-store';
-import { useThread, useChat, useCreateThread } from '@/hooks';
+import { useThread, useChat, useCreateThread, useTextSelection, useCreateSubthread } from '@/hooks';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { MessageList, MessageInput } from '@/components/message';
+import { SelectionPopup } from '@/components/subthread';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Plus } from 'lucide-react';
 
 export function MainContent() {
-  const { activeThreadId, setActiveThread } = useAppStore();
+  const { activeThreadId, setActiveThread, setRightPaneOpen, setHighlightedSubthread } = useAppStore();
   const { data, isLoading } = useThread(activeThreadId);
   const createThread = useCreateThread();
+  const createSubthread = useCreateSubthread();
+  const { selection, handleSelection, clearSelection } = useTextSelection();
   
   const { sendMessage, isLoading: isSending, streamingContent, optimisticUserMessage } = useChat({
     threadId: activeThreadId || '',
@@ -20,6 +23,27 @@ export function MainContent() {
   const handleNewThread = async () => {
     const thread = await createThread.mutateAsync({ title: 'New Thread' });
     setActiveThread(thread.id);
+  };
+
+  const handleCreateSubthread = async (message: string) => {
+    if (!selection || !activeThreadId) return;
+
+    await createSubthread.mutateAsync({
+      parentThreadId: activeThreadId,
+      anchorMessageId: selection.messageId,
+      anchorStart: selection.start,
+      anchorEnd: selection.end,
+      anchorText: selection.text,
+      firstMessage: message,
+    });
+
+    clearSelection();
+    setRightPaneOpen(true);
+  };
+
+  const handleAnchorClick = (subthreadId: string) => {
+    setHighlightedSubthread(subthreadId);
+    setRightPaneOpen(true);
   };
 
   // No thread selected - show welcome
@@ -59,6 +83,7 @@ export function MainContent() {
   }
 
   const messages = data?.messages || [];
+  const subthreads = data?.subthreads || [];
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
@@ -71,20 +96,32 @@ export function MainContent() {
             </div>
           ) : (
             <MessageList 
-              messages={messages} 
+              messages={messages}
+              subthreads={subthreads}
               optimisticUserMessage={optimisticUserMessage}
-              streamingContent={streamingContent} 
+              streamingContent={streamingContent}
+              onTextSelect={handleSelection}
+              onAnchorClick={handleAnchorClick}
             />
           )}
         </div>
       </ScrollArea>
+
+      {/* Selection Popup */}
+      {selection && (
+        <SelectionPopup
+          selection={selection}
+          onSubmit={handleCreateSubthread}
+          onClose={clearSelection}
+        />
+      )}
 
       {/* Input Area */}
       <div className="border-t bg-background p-4">
         <div className="mx-auto max-w-3xl">
           <MessageInput
             onSend={sendMessage}
-            disabled={isSending}
+            disabled={isSending || createSubthread.isPending}
             placeholder={isSending ? 'AI is responding...' : 'Type your message...'}
           />
         </div>
