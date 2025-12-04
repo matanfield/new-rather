@@ -13,7 +13,7 @@ export function MainContent() {
   const { data, isLoading } = useThread(activeThreadId);
   const createThread = useCreateThread();
   
-  const { sendMessage, isLoading: isSending, streamingContent } = useChat({
+  const { sendMessage, isLoading: isSending, streamingContent, optimisticUserMessage } = useChat({
     threadId: activeThreadId || '',
   });
 
@@ -65,12 +65,16 @@ export function MainContent() {
       {/* Messages Area */}
       <ScrollArea className="flex-1">
         <div className="mx-auto max-w-3xl px-4 py-6">
-          {messages.length === 0 && !streamingContent ? (
+          {messages.length === 0 && !streamingContent && !optimisticUserMessage ? (
             <div className="py-20 text-center text-muted-foreground">
               <p>Start the conversation by typing a message below.</p>
             </div>
           ) : (
-            <MessageList messages={messages} streamingContent={streamingContent} />
+            <MessageList 
+              messages={messages} 
+              optimisticUserMessage={optimisticUserMessage}
+              streamingContent={streamingContent} 
+            />
           )}
         </div>
       </ScrollArea>

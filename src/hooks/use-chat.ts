@@ -2,15 +2,24 @@
 
 import { useCallback, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import type { Message } from '@/db/schema';
 
 interface UseChatOptions {
   threadId: string;
   onFinish?: () => void;
 }
 
+interface OptimisticMessage {
+  userMessage: Message | null;
+  assistantContent: string;
+}
+
 export function useChat({ threadId, onFinish }: UseChatOptions) {
   const [isLoading, setIsLoading] = useState(false);
-  const [streamingContent, setStreamingContent] = useState('');
+  const [optimistic, setOptimistic] = useState<OptimisticMessage>({
+    userMessage: null,
+    assistantContent: '',
+  });
   const queryClient = useQueryClient();
 
   const sendMessage = useCallback(
@@ -18,7 +27,21 @@ export function useChat({ threadId, onFinish }: UseChatOptions) {
       if (!content.trim() || isLoading) return;
 
       setIsLoading(true);
-      setStreamingContent('');
+      
+      // Optimistically add user message
+      const tempUserMessage: Message = {
+        id: `temp-${Date.now()}`,
+        threadId,
+        role: 'user',
+        content: content.trim(),
+        position: -1, // Will be replaced
+        createdAt: new Date(),
+      };
+      
+      setOptimistic({
+        userMessage: tempUserMessage,
+        assistantContent: '',
+      });
 
       try {
         const res = await fetch(`/api/threads/${threadId}/messages`, {
@@ -40,19 +63,26 @@ export function useChat({ threadId, onFinish }: UseChatOptions) {
 
           const chunk = decoder.decode(value);
           accumulated += chunk;
-          setStreamingContent(accumulated);
+          setOptimistic(prev => ({
+            ...prev,
+            assistantContent: accumulated,
+          }));
         }
 
-        // Refresh thread data
+        // Clear optimistic state BEFORE invalidating to prevent duplicates
+        setOptimistic({ userMessage: null, assistantContent: '' });
+        
+        // Now refresh with server data
         await queryClient.invalidateQueries({ queryKey: ['threads', threadId] });
         await queryClient.invalidateQueries({ queryKey: ['threads'] });
         
         onFinish?.();
       } catch (error) {
         console.error('Failed to send message:', error);
+        // Clear optimistic state on error too
+        setOptimistic({ userMessage: null, assistantContent: '' });
       } finally {
         setIsLoading(false);
-        setStreamingContent('');
       }
     },
     [threadId, isLoading, queryClient, onFinish]
@@ -61,6 +91,7 @@ export function useChat({ threadId, onFinish }: UseChatOptions) {
   return {
     sendMessage,
     isLoading,
-    streamingContent,
+    optimisticUserMessage: optimistic.userMessage,
+    streamingContent: optimistic.assistantContent,
   };
 }
