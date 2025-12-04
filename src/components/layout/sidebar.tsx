@@ -1,9 +1,11 @@
 'use client';
 
 import { useAppStore } from '@/stores/app-store';
+import { useCreateThread } from '@/hooks';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import { ThreadList } from '@/components/thread';
 import { Plus, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { UserButton } from '@clerk/nextjs';
@@ -11,7 +13,13 @@ import { UserButton } from '@clerk/nextjs';
 const SIDEBAR_WIDTH = 280;
 
 export function Sidebar() {
-  const { sidebarOpen } = useAppStore();
+  const { sidebarOpen, setActiveThread } = useAppStore();
+  const createThread = useCreateThread();
+
+  const handleNewThread = async () => {
+    const thread = await createThread.mutateAsync({ title: 'New Thread' });
+    setActiveThread(thread.id);
+  };
 
   return (
     <aside
@@ -28,7 +36,13 @@ export function Sidebar() {
 
       {/* Actions */}
       <div className="flex gap-2 px-3 pb-2">
-        <Button variant="outline" className="flex-1 justify-start gap-2" size="sm">
+        <Button
+          variant="outline"
+          className="flex-1 justify-start gap-2"
+          size="sm"
+          onClick={handleNewThread}
+          disabled={createThread.isPending}
+        >
           <Plus className="h-4 w-4" />
           New Thread
         </Button>
@@ -41,12 +55,7 @@ export function Sidebar() {
 
       {/* Thread List */}
       <ScrollArea className="flex-1 px-2">
-        <div className="py-2">
-          {/* Placeholder for thread list */}
-          <p className="px-2 py-8 text-center text-sm text-muted-foreground">
-            No threads yet
-          </p>
-        </div>
+        <ThreadList />
       </ScrollArea>
 
       <Separator />

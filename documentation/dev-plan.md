@@ -6,64 +6,64 @@ This document outlines the development phases for Rather, a fractal AI chat appl
 
 ---
 
-## Phase 1: Foundation
+## Phase 1: Foundation ✅
 
 ### Project Setup
 - [x] Next.js 16 with App Router
 - [x] TypeScript configuration
 - [x] Tailwind CSS 4
-- [ ] Shadcn/UI installation and configuration
-- [ ] Base component library setup
+- [x] Shadcn/UI installation and configuration
+- [x] Base component library setup
 
 ### Database & Auth
-- [ ] Neon PostgreSQL setup
-- [ ] Drizzle ORM configuration
-- [ ] Database schema (users, threads, messages)
-- [ ] Clerk authentication integration
-- [ ] User sync webhook
-- [ ] Protected routes middleware
+- [x] Neon PostgreSQL setup
+- [x] Drizzle ORM configuration
+- [x] Database schema (users, threads, messages)
+- [x] Clerk authentication integration
+- [x] User sync webhook
+- [x] Protected routes middleware
 
 ### Layout Shell
-- [ ] App layout with sidebar + main area structure
-- [ ] Sidebar component (full height, collapsible)
-- [ ] Main header (spans from sidebar edge to screen edge)
-- [ ] Sidebar toggle button in header
-- [ ] Right pane placeholder (closed by default)
+- [x] App layout with sidebar + main area structure
+- [x] Sidebar component (full height, collapsible)
+- [x] Main header (spans from sidebar edge to screen edge)
+- [x] Sidebar toggle button in header
+- [x] Right pane placeholder (closed by default)
 - [ ] Responsive breakpoints
 
 ### Theme System
-- [ ] CSS variables for light/dark themes
-- [ ] Theme provider with system detection
+- [x] CSS variables for light/dark themes
+- [x] Theme provider with system detection
 - [ ] Theme toggle in settings
-- [ ] LocalStorage persistence
+- [x] LocalStorage persistence
 
 ---
 
-## Phase 2: Core Chat
+## Phase 2: Core Chat ✅
 
 ### Thread Management
-- [ ] Create new root thread
-- [ ] Thread list in sidebar
-- [ ] Thread ordering by lastUpdate
-- [ ] Delete thread (basic, no cascade yet)
-- [ ] Active thread state
+- [x] Create new root thread
+- [x] Thread list in sidebar
+- [x] Thread ordering by lastUpdate
+- [x] Delete thread (with cascade)
+- [x] Active thread state
 
 ### Message System
-- [ ] Message display (user/assistant bubbles)
-- [ ] Message input with auto-expand
-- [ ] Send message functionality
+- [x] Message display (user/assistant bubbles)
+- [x] Message input with auto-expand
+- [x] Send message functionality
 - [ ] Markdown rendering for AI responses
 
 ### LLM Integration
-- [ ] Vercel AI SDK setup
-- [ ] Claude integration (primary model)
-- [ ] Streaming responses
-- [ ] Auto-generate thread title after first user message
+- [x] Vercel AI SDK setup
+- [x] Claude integration (primary model)
+- [x] Streaming responses
+- [x] Auto-generate thread title after first user message
 
 ### State Management
-- [ ] Zustand store for UI state
-- [ ] TanStack Query for server state
-- [ ] Navigation history tracking
+- [x] Zustand store for UI state
+- [x] TanStack Query for server state
+- [x] Navigation history tracking
 
 ---
 
