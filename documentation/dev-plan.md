@@ -77,8 +77,8 @@ This document outlines the development phases for Rather, a fractal AI chat appl
 
 ### Anchor System
 - [x] Anchor highlighting in messages
-- [ ] `[[syntax]]` parsing in user input
-- [ ] Subthread creation from inline anchors
+- [x] `[[syntax]]` parsing in user input (visual highlight)
+- [ ] Subthread creation from inline anchors (auto-create)
 - [x] Click anchor → open right pane + highlight card
 
 ### Right Pane
@@ -88,25 +88,25 @@ This document outlines the development phases for Rather, a fractal AI chat appl
 - [x] Right pane toggle button
 
 ### AI Subthread Creation
-- [ ] Tool definition for create_subthread
-- [ ] Process tool calls in streaming response
-- [ ] Create subthread with AI's initial content
-- [ ] Real-time UI update for new subthreads
+- [x] Tool definition for create_subthread
+- [x] Process tool calls in streaming response
+- [x] Create subthread with AI's initial content
+- [x] Anchor position tracking
 
 ---
 
-## Phase 4: Navigation & Context
+## Phase 4: Navigation & Context ✅
 
 ### Navigation
-- [ ] Breadcrumb component
-- [ ] Clickable breadcrumb segments
-- [ ] Back button (history-based)
-- [ ] Thread navigation from sidebar
+- [x] Breadcrumb component
+- [x] Clickable breadcrumb segments
+- [x] Back button (history-based)
+- [x] Thread navigation from sidebar
 
 ### Nested Threads
-- [ ] Expandable thread hierarchy in sidebar
-- [ ] Indented subthread display
-- [ ] Expand/collapse toggle
+- [x] Expandable thread hierarchy in sidebar
+- [x] Indented subthread display
+- [x] Expand/collapse toggle
 
 ### Context Inheritance
 - [ ] Build context from parent thread

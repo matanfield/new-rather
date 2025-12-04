@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { ThreadList } from '@/components/thread';
+import { ThemeToggle } from '@/components/theme-toggle';
 import { Plus, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { UserButton } from '@clerk/nextjs';
@@ -32,6 +33,7 @@ export function Sidebar() {
       {/* Sidebar Header */}
       <div className="flex h-14 items-center justify-between px-4">
         <span className="text-lg font-semibold text-sidebar-foreground">Rather</span>
+        <ThemeToggle />
       </div>
 
       {/* Actions */}
@@ -69,7 +71,7 @@ export function Sidebar() {
             },
           }}
         />
-        <span className="text-sm text-sidebar-foreground">Account</span>
+        <span className="flex-1 text-sm text-sidebar-foreground">Account</span>
       </div>
     </aside>
   );
