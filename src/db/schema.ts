@@ -1,4 +1,20 @@
-import { pgTable, text, timestamp, uuid, integer } from 'drizzle-orm/pg-core';
+import { pgTable, pgEnum, text, timestamp, uuid, integer } from 'drizzle-orm/pg-core';
+
+// Enums for work units
+export const workUnitTypeEnum = pgEnum('work_unit_type', ['fix', 'feature']);
+export const workUnitStatusEnum = pgEnum('work_unit_status', ['todo', 'doing', 'done']);
+
+// Work Units table - project management for development tasks
+export const workUnits = pgTable('work_units', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  title: text('title').notNull(),
+  specification: text('specification'),
+  type: workUnitTypeEnum('type').notNull(),
+  status: workUnitStatusEnum('status').default('todo').notNull(),
+  files: text('files').array(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
 
 // Users table - synced from Clerk
 export const users = pgTable('users', {
@@ -43,3 +59,7 @@ export type NewThread = typeof threads.$inferInsert;
 
 export type Message = typeof messages.$inferSelect;
 export type NewMessage = typeof messages.$inferInsert;
+
+export type WorkUnit = typeof workUnits.$inferSelect;
+export type NewWorkUnit = typeof workUnits.$inferInsert;
+

@@ -154,3 +154,4 @@ export function SelectionPopup({ selection, onSend, onSendAndEnter, onClose, isL
     </TooltipProvider>
   );
 }
+

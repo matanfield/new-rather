@@ -141,3 +141,4 @@ export const useAppStore = create<AppState>((set, get) => ({
   appendSubthreadStreamingContent: (chunk) =>
     set((state) => ({ subthreadStreamingContent: state.subthreadStreamingContent + chunk })),
 }));
+

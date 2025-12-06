@@ -93,3 +93,4 @@ export function MarkdownContent({ content, className }: MarkdownContentProps) {
     </div>
   );
 }
+

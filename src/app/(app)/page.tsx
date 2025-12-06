@@ -3,3 +3,4 @@ export default function HomePage() {
   // Thread content will be rendered based on activeThreadId in the store
   return null;
 }
+

@@ -124,3 +124,4 @@ export function useChat({ threadId, onFinish }: UseChatOptions) {
     streamingContent: optimistic.assistantContent,
   };
 }
+

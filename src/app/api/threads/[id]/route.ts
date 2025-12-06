@@ -142,3 +142,4 @@ async function getDescendantIds(threadId: string, userId: string): Promise<strin
 
   return descendantIds;
 }
+

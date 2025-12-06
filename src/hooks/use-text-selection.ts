@@ -86,3 +86,4 @@ function getTextOffset(root: Node, node: Node, offset: number): number {
   
   return totalOffset + offset;
 }
+

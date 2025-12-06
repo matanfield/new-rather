@@ -14,3 +14,4 @@ export const chatModel = anthropic('claude-sonnet-4-20250514');
 
 // Model for generating titles and summaries
 export const utilityModel = anthropic('claude-sonnet-4-20250514');
+

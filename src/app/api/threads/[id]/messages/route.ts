@@ -193,3 +193,4 @@ async function generateThreadTitle(threadId: string, firstMessage: string) {
     console.error('Failed to generate title:', error);
   }
 }
+
